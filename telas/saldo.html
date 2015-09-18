@@ -1,0 +1,61 @@
+<form id="form">
+	<div id="dados" name="dados" style="width:calc(100% - 10px);height:50px">
+		<table>
+			<thead>
+				<th style="width:15%">Ano</th>
+				<th style="width:10%">Mês</th>
+				<th style="width:25%">C.Corrente (+/-)</th>
+				<th style="width:25%">Dinheiro (+/-)</th>
+				<th style="width:25%">C. de Crédito (+)</th>
+			</thead>
+			<tbody id="listaSaldo" role="lista">
+
+			</tbody>			
+		</table>	
+	</div>
+</form>
+<script>
+	var Saldo = (function() {
+
+		function Saldo() {
+			if (!(this instanceof Saldo)) {
+				return new Saldo();
+			}
+		}
+		Saldo.Init = function(tela) {
+			Saldo.listar(tela);
+		};
+		
+		
+		Saldo.listar = function(tela) {
+			var lista = '';			
+			var mes = '';
+			var saldo = new DataSet('','SALDO', function() {
+				saldo.close();
+				saldo.condicao(' '+
+								' ORDER BY SALDO.ANO, SALDO.MES');
+				saldo.open(function() {					
+					while(!saldo.eof()) {			
+						mes = saldo.fieldByName('MES').asString();
+						if (mes < 10)
+							mes = "0" + mes;
+						lista += '<tr role="linha"">'+
+									'<td style="width:15%">'+saldo.fieldByName('ANO').asString()+'</td>'+
+									'<td style="width:10%">'+mes+'</td>'+
+									'<td style="width:20%" align="right">'+formataValores('N',parseDouble(saldo.fieldByName('CCORRENTE').asString()),2)+'</td>' +
+									'<td style="width:20%" align="right">'+formataValores('N',parseDouble(saldo.fieldByName('DINHEIRO').asString()),2)+'</td>' +
+									'<td style="width:20%" align="right">'+formataValores('N',parseDouble(saldo.fieldByName('CCREDITO').asString()),2)+'</td>' +
+								'</tr>';
+						saldo.next();	
+					}					
+					tela.querySelector('#listaSaldo').innerHTML = lista;										
+				});
+			});
+	
+		};
+
+		classeJS = Saldo;
+		return Saldo;
+
+	})();
+</script>

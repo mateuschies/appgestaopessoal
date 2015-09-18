@@ -1,0 +1,18 @@
+CACHE MANIFEST
+# Version 0.6799999
+
+index.html
+css/main.css
+js/webapp.js
+js/offline.js
+js/dataset.js
+js/lista.js
+js/versao.js
+js/base.js
+js/index.js
+
+NETWORK:
+*
+
+FALLBACK:
+/fallback.html

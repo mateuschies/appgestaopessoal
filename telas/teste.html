@@ -1,0 +1,17 @@
+<form name="test">
+	<a class="highlighttext" href="javascript:selectcopy('test.select1')">Select All</a><br>
+	<textarea name="select1" rows=10 cols=35 >This is some text. This is some text. This is some text. This is some text.</textarea>
+	<button value="C" onclick="copiar()"/>
+</form>
+<script>
+	function copiar(){
+		
+		var exemploTransformacao = document.querySelector("#select1").value;
+		
+		var clip = new ClipboardEvent('copy');
+		clip.clipboardData.setData('text/plain', exemploTransformacao);
+		clip.preventDefault();
+
+		e.target.dispatchEvent(clip);
+	}
+</script>

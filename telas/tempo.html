@@ -1,0 +1,69 @@
+<form id="form">
+	<div> 		
+		<div style="background-color:#FAF9F9; width:100%;height:150px;border-radius: 5px;overflow: hidden;background: #eee;"> 
+			<div style="width:100%"> 
+				<center><h1 style="color:#5a5a5a">Tempo em Três de Maio</h1></center> 
+			</div> 
+			<div> 
+				<div style="float:left"> 
+					<h1>
+						<strong id="temperatura" style="color: #468847;font-weight: bold;font-size: 38.5px;">18ºC</strong>
+					</h1> 					
+				</div> 	
+				<div style="padding-left:10px;padding-top:10px;float:left;height:85px"> 
+					 <div style="height:27px">
+						<span class="tempo" style="background-color: #fca044;">Umidade <span id="humidade">66%</span></span>						
+					</div>						 
+					<div style="height:27px">					
+						<span class="tempo" style="background-color: #3b9c00">Vento <span id="vento">8Km</span></span>
+					</div>	
+					<div style="height:27px">
+						<span class="tempo" style="background-color: #3a87ad">Precipitação <span id="precipitacao">0</span></span> 
+					</div>	
+				</div> 
+			</div> 
+			<div style="clear:both">
+			</div>
+			<div>
+				<span style="font-size: 12px;" id="atualizado">Atualizado em: 05/05/2015 10:36:10</span> 
+			</div>
+		</div> 
+	</div>
+</form>
+<script>
+	var Tempo = (function() {
+		function Tempo() {
+			if (!(this instanceof Tempo)) {
+				return new Tempo();
+			}
+		}
+		Tempo.Init = function(tela) {
+			
+			var xhr = new XMLHttpRequest();			
+			xhr.onreadystatechange=function(){
+				if (xhr.readyState==4 && xhr.status==200){
+					//tela.querySelector('#atualizado').innerHTML=xhr.responseText;
+					console.log(xhr.responseText);
+				}
+			}
+			xhr.open("GET","https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%20in%20(select%20woeid%20from%20geo.places(1)%20where%20text%3D%22Tr%C3%AAs%20de%20Maio%2C%20RS%22)&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys",true);
+			xhr.send();
+			
+			/*
+			var data = new FormData();
+			data.append('user', 'person');
+			var xhr1 = new XMLHttpRequest();
+			xhr1.open('GET', 'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%20in%20(select%20woeid%20from%20geo.places(1)%20where%20text%3D%22Tr%C3%AAs%20de%20Maio%2C%20RS%22)&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys', true);
+			xhr1.onload = function () {
+				// do something to response
+				console.log(this.responseText);
+			};
+			xhr1.send(data);
+			*/
+		};
+
+		classeJS = Tempo;
+		return Tempo;
+
+	})();
+</script>

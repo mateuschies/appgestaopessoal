@@ -1,0 +1,121 @@
+<form id="form">
+	<div style="width:calc(100% - 10px);">
+		<div style="width:60%;float:left">
+			<select id="meses" name="meses" style="width:100%">
+				<option value="1">Janeiro</option>
+				<option value="2">Fevereiro</option>
+				<option value="3">Março</option>
+				<option value="4">Abril</option>
+				<option value="5">Maio</option>
+				<option value="6">Junho</option>
+				<option value="7">Julho</option>
+				<option value="8">Agosto</option>
+				<option value="9">Setembro</option>
+				<option value="10">Outubro</option>
+				<option value="11">Novembro</option>
+				<option value="12">Dezembro</option>
+			</select>
+		</div>
+		<div style="width:30%;float:left">
+			<select id="anos" name="anos" style="width:100%;">
+				<option value="2015">2015</option>
+				<option value="2016">2016</option>
+				<option value="2017">2017</option>
+				<option value="2018">2018</option>
+				<option value="2019">2019</option>
+				<option value="2020">2020</option>
+			</select>		
+		</div>
+		<div style="width:10%;float:left">
+			<input type="button" value="..." id="btnCarregar" style="width:100%;height:50px"/>
+		</div>
+	</div>
+		<div id="dados" name="dados" style="width:calc(100% - 10px);height:50px">
+		<table>
+			<thead>
+				<th style="width:45%">Data</th>
+				<th style="width:45%">Motorista</th>
+				<th style="width:10%">Excluir</th>
+			</thead>
+			<tbody id="listaitensCarona" role="lista">
+
+			</tbody>			
+		</table>	
+	</div>
+</form>
+<script>
+	var CaronaLista = (function() {
+
+		function CaronaLista() {
+			if (!(this instanceof CaronaLista)) {
+				return new CaronaLista();
+			}
+		}
+		CaronaLista.Init = function(tela) {
+			tela.querySelector("#btnCarregar").addEventListener('click', CaronaLista.carregar);
+			var data = new Date();
+			var mes = parseInt(data.getMonth() + 1);
+			tela.querySelector('#meses').value = mes;			
+			var ano = data.getFullYear();
+			tela.querySelector('#anos').value = ano;
+			CaronaLista.listar(tela, mes, ano);
+		};
+		
+		CaronaLista.carregar = function(e) {
+			var tela = defineQuemsou(e.target);
+			CaronaLista.listar(tela, tela.querySelector('#meses').value, tela.querySelector('#anos').value);
+		};
+		
+		CaronaLista.listar = function(tela, mes, ano) {
+			var lista = '';
+			if (mes < 10)
+				mes = "0" + mes;
+			var primeiroDia = ano + "-" + mes + "-01";
+			var ultimoDia = ano + "-" + mes + "-"+ daysInMonth(mes, ano);
+			var carona = new DataSet('','CARONA', function() {
+				carona.close();
+				carona.condicao(' WHERE CARONA.DATA BETWEEN \''+primeiroDia+'\' AND \''+ultimoDia+'\''+
+								' ORDER BY CARONA.DATA');
+				carona.open(function() {					
+					while(!carona.eof()) {						
+						lista += '<tr role="linha" scarona="'+carona.fieldByName('SCARONA').asString()+'">'+
+									'<td style="width:45%">'+carona.fieldByName('DATA').asString()+'</td>'+
+									'<td style="width:45%">'+carona.fieldByName('DESCRICAO').asString()+'</td>'+
+									'<td style="width:10%" align="center"><img title="Remover item" src="images/btn-excluir.png" style="cursor:pointer;" class="imgRemover"></td>' +
+								'</tr>';
+						carona.next();	
+					}					
+					tela.querySelector('#listaitensCarona').innerHTML = lista;					
+					var btn_excluir = tela.querySelectorAll('.imgRemover');
+					var i = 0, l = btn_excluir.length;
+					for(; i < l; i++) {
+						btn_excluir[i].addEventListener('click', CaronaLista.remover);						
+					}
+				});
+			});
+	
+		};
+		
+		CaronaLista.remover = function(e) {
+			var tela = defineQuemsou(e.target);
+			if (!confirm('Deseja realmente excluir este item?')) {
+				return;
+		 	}
+			var linha = parentUntilAttr(e.target, 'role', 'linha');
+			var scarona = linha.getAttribute('scarona')
+			var carona = new DataSet('','CARONA', function() {
+				carona.close();
+				carona.condicao(' WHERE CARONA.SCARONA =' + scarona);
+				carona.open(function() {					
+					carona.del(function(){
+						CaronaLista.listar(tela, tela.querySelector('#meses').value, tela.querySelector('#anos').value);
+					});
+				});
+			});	
+		};
+
+		classeJS = CaronaLista;
+		return CaronaLista;
+
+	})();
+</script>

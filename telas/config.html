@@ -1,0 +1,32 @@
+<form id="form">
+	<h1>Configurações</h1>
+	<h2>Versão: 2015.09.01</h2>
+	<h2>Data Atualização: <label name="data" id="data"></label></h2>
+	<h2>Autor: Mateus André Chies</h2>
+	<h2>e-mail: <a href="mailto: mateuschies@gmail.com?Subject=App%20Gestão%20Pessoal" target="_top">mateuschies@gmail.com</a></h2>
+	<h2>HPage: <a href="http://mateuschies.blogspot.com.br/" target="_blank" >mateuschies.blogspot.com.br</a></h2>
+</form>
+<script>  
+	var Config = (function() {		
+		function Config() {
+			if (!(this instanceof Config)) {
+				return new Config();
+			}
+		}
+		Config.Init = function(tela) {
+			var sistema = new DataSet('','SISTEMA', function() {
+				sistema.condicao(' WHERE SISTEMA.SSISTEMA > 0');
+				sistema.open(function() {
+					if (!sistema.isEmpty()){
+						var data = sistema.fieldByName('DTATUALIZACAO').asString();						
+						tela.querySelector('#data').innerText = ''+data;
+					} 					
+				});
+			});
+		};
+
+		classeJS = Config;
+		return Config;
+
+	})();
+</script>		

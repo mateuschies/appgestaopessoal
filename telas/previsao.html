@@ -1,0 +1,105 @@
+<form id="form">
+	<div>
+		<label>Cód. Conta</label>
+		<br>
+		<select id="CONTA" name="CONTA" role="lista" style="width:100%">
+		</select>
+	</div>
+	<div>		
+		<label>Mes:</label>
+		<br>
+		<select id="mes" name="mes" style="width:100%">
+			<option value="1">Janeiro</option>
+			<option value="2">Fevereiro</option>
+			<option value="3">Março</option>
+			<option value="4">Abril</option>
+			<option value="5">Maio</option>
+			<option value="6">Junho</option>
+			<option value="7">Julho</option>
+			<option value="8">Agosto</option>
+			<option value="9">Setembro</option>
+			<option value="10">Outubro</option>
+			<option value="11">Novembro</option>
+			<option value="12">Dezembro</option>
+		</select>
+	</div>		
+	<div>
+		<label>Valor R$</label>
+		<br>
+		<input id="valor" name="valor" type="text" style="width:100%"/>
+		<br>
+	</div>		
+	<div>
+		<input type="button" value="Salvar" id="btnSalvar" style="width:100%;height:50px"/>
+		<br>		
+		<input type="button" value="Listar" id="btnListar" style="width:100%;height:50px"/>
+	</div>
+</form>
+<script>
+	var Previsao = (function() {
+		var plista;
+		function Previsao() {
+			if (!(this instanceof Previsao)) {
+				return new Previsao();
+			}
+		}
+		Previsao.Init = function(tela) {
+			tela.querySelector('#btnSalvar').addEventListener('click', Previsao.salvar);
+			tela.querySelector('#btnListar').addEventListener('click', Previsao.listar);			
+			
+			var data = new Date();
+			var mes = parseInt(data.getMonth() + 1);
+			tela.querySelector('#mes').value = mes;
+
+			var conta = new DataSet('','CONTA', function() {
+				conta.condicao(' WHERE CONTA.SCONTA > 0');
+				conta.open(function() {
+					var selectC = tela.querySelector('#CONTA');
+					selectC.options.length = 0;
+					while(!conta.eof()) {
+						selectC.options.add(new Option(conta.fieldByName('CONTA').asString()+' - '+conta.fieldByName('TIPO').asString()+' - '+conta.fieldByName('DESCRICAO').asString(),conta.fieldByName('SCONTA').asString()));
+						conta.next();	
+					}
+				});
+			});
+		};
+
+		Previsao.salvar = function(e) {
+			var tela = defineQuemsou(e.target);
+			
+			if(tela.querySelector('#valor').value === ''){
+				alert('Informe o Valor');
+				tela.querySelector('#valor').focus();
+				return;
+			}
+			
+			var previsao = new DataSet('','PREVISAO', function() {
+				var data = new Date();
+				previsao.condicao(' WHERE PREVISAO.SCONTA = '+tela.querySelector('#CONTA').value
+													+ ' AND PREVISAO.MES='+tela.querySelector('#mes').value
+													+ ' AND PREVISAO.ANO='+data.getFullYear());
+				previsao.open(function() {
+					if (previsao.recordCount() === 0){
+						previsao.insert();
+						previsao.fieldByName('SCONTA').asString(tela.querySelector('#CONTA').value);				
+						previsao.fieldByName('MES').asString(tela.querySelector('#mes').value);
+						previsao.fieldByName('ANO').asString(data.getFullYear());
+					} else{
+						previsao.edit();
+					}
+					previsao.fieldByName('VALOR').asString(tela.querySelector('#valor').value);
+					previsao.post();
+					Previsao.listar(e);
+				});
+			});			
+		};
+
+		Previsao.listar = function(e) {
+			WebApp.navegar('previsaoLista.html',{});
+		};		
+
+		classeJS = Previsao;
+		return Previsao;
+
+	})();
+</script>

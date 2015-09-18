@@ -1,0 +1,222 @@
+<form id="form">
+	<div style="width:calc(100% - 10px);">
+		<div style="width:60%;float:left">
+			<select id="meses" name="meses" style="width:100%">
+				<option value="1">Janeiro</option>
+				<option value="2">Fevereiro</option>
+				<option value="3">Março</option>
+				<option value="4">Abril</option>
+				<option value="5">Maio</option>
+				<option value="6">Junho</option>
+				<option value="7">Julho</option>
+				<option value="8">Agosto</option>
+				<option value="9">Setembro</option>
+				<option value="10">Outubro</option>
+				<option value="11">Novembro</option>
+				<option value="12">Dezembro</option>
+			</select>
+		</div>
+		<div style="width:30%;float:left">
+			<select id="anos" name="anos" style="width:100%;">
+				<option value="2015">2015</option>
+				<option value="2016">2016</option>
+				<option value="2017">2017</option>
+				<option value="2018">2018</option>
+				<option value="2019">2019</option>
+				<option value="2020">2020</option>
+			</select>		
+		</div>
+		<div style="width:10%;float:left">
+			<input type="button" value="..." id="btnCarregar" style="width:100%;height:50px"/>
+		</div>
+	</div>
+	<div id="dados" name="dados" style="width:calc(100% - 10px);;height:50px">
+		<table>
+			<thead>
+				<tr style=""> 
+					<th style="width:10%">Grupo de conta</th>
+					<th style="width:10%">Sub-grupo de conta</th>
+					<!--<th style="width:10%">Cod.</th>-->
+					<th style="width:10%">Data</th>
+					<th style="width:10%">Descritivo</th>
+					<th style="width:10%">Valor R$</th>
+					<th style="width:10%">Meio de pagamento</th>
+					<th style="width:10%">C.Corrente (+/-)</th>
+					<th style="width:10%">Dinheiro (+/-)</th>
+					<th style="width:10%">C. de Crédito (+)</th>
+					<th style="width:10%">Excluir</th>
+				</tr>
+			</thead>
+			<tbody id="listaLancamentos" role="lista">
+
+			</tbody>			
+    </table>
+	</div>
+</form>
+<script>
+	var LancamentoLista = (function() {
+
+		function LancamentoLista() {
+			if (!(this instanceof LancamentoLista)) {
+				return new LancamentoLista();
+			}
+		}
+		LancamentoLista.Init = function(tela) {		
+			//debugger;
+			var data = new Date();
+			var mes = parseInt(data.getMonth() + 1);				
+			tela.querySelector('#meses').value = mes;			
+			var ano = data.getFullYear();
+			tela.querySelector('#anos').value = ano;
+			tela.querySelector("#btnCarregar").addEventListener('click', LancamentoLista.carregar);
+			LancamentoLista.listar(tela, mes, ano);
+		};
+		
+		LancamentoLista.carregar = function(e) {
+			var tela = defineQuemsou(e.target);
+			LancamentoLista.listar(tela, tela.querySelector('#meses').value, tela.querySelector('#anos').value);
+		};
+		
+		LancamentoLista.listar = function(tela, mes, ano) {
+			
+			var lista = '';
+			if (mes < 10)
+				mes = "0" + mes;			
+			var primeiroDia = ano + "-" + mes + "-01";
+			var ultimoDia = ano + "-" + mes + "-"+ daysInMonth(mes, ano);
+			
+			var movimento = new DataSet('','MOVIMENTO', function() {
+				movimento.close();
+				movimento.commandText('SELECT MOVIMENTO.*, CONTA.CONTA, CONTA.TIPO, CONTA.DESCRICAO AS DESCRICAOCONTA,'+
+									' MEIOPGTO.PGTO, MEIOPGTO.FORMA, MEIOPGTO.TIPO AS TIPOPGTO'+
+									' FROM MOVIMENTO'+
+									' 	LEFT JOIN CONTA ON (MOVIMENTO.SCONTA=CONTA.SCONTA )'+
+									' 	LEFT JOIN MEIOPGTO ON (MEIOPGTO.SMEIOPGTO=MOVIMENTO.SMEIOPGTO)')
+				movimento.condicao(' WHERE MOVIMENTO.DATA BETWEEN \''+primeiroDia+'\' AND \''+ultimoDia+'\''+
+								   ' ORDER BY MOVIMENTO.DATA, MOVIMENTO.SMOVIMENTO');
+				movimento.open(function() {
+					var cconrrente = 0.0;
+					var dinheiro = 0.0;
+					var ccredito = 0.0;
+					var data = "";
+					var FColorCCorrente = "black";
+					var FColorDinheiro = "black";
+					var FColorCCredito = "black";
+					var FColorValor = "black";
+					while(!movimento.eof()) {
+						FColorCCorrente = "black";
+						FColorDinheiro = "black";
+						FColorCCredito = "black";
+						FColorValor = "black";
+						data = movimento.fieldByName('DATA').asString();
+						if (movimento.fieldByName('PGTO').asString() === 'DP'){
+							FColorValor = "blue";
+							cconrrente += parseDouble(movimento.fieldByName('VALOR').asString());
+						} else if (movimento.fieldByName('PGTO').asString() === 'DB'){
+							cconrrente -= parseDouble(movimento.fieldByName('VALOR').asString());
+						} else if (movimento.fieldByName('PGTO').asString() === 'TR'){
+							cconrrente -= parseDouble(movimento.fieldByName('VALOR').asString());
+						} else if (movimento.fieldByName('PGTO').asString() === 'CH'){
+							cconrrente -= parseDouble(movimento.fieldByName('VALOR').asString());
+						} else if (movimento.fieldByName('PGTO').asString() === 'SQ'){
+							cconrrente -= parseDouble(movimento.fieldByName('VALOR').asString());
+						}
+						if (movimento.fieldByName('PGTO').asString() === 'SQ'){
+							dinheiro += parseDouble(movimento.fieldByName('VALOR').asString());
+						} else if (movimento.fieldByName('PGTO').asString() === 'RD'){
+							FColorValor = "blue";
+							dinheiro += parseDouble(movimento.fieldByName('VALOR').asString());
+						} else if (movimento.fieldByName('PGTO').asString() === 'DI'){
+							dinheiro -= parseDouble(movimento.fieldByName('VALOR').asString());
+						}
+						if (movimento.fieldByName('PGTO').asString() === 'CC'){
+							ccredito += parseDouble(movimento.fieldByName('VALOR').asString());
+						} else if (movimento.fieldByName('PGTO').asString() === 'PC'){
+							ccredito += parseDouble(movimento.fieldByName('VALOR').asString());
+						}
+						if (cconrrente < 0.0){
+							FColorCCorrente = "red";
+						}
+						if (dinheiro < 0.0){
+							FColorDinheiro = "red";
+						}
+						if (ccredito < 0.0){
+							FColorCCredito = "red";
+						}
+						
+						lista += '<tr role="linha" smovimento="'+movimento.fieldByName('SMOVIMENTO').asString()+'">'+
+									'<td style="width:10%">'+movimento.fieldByName('TIPO').asString()+'</td>'+
+									'<td style="width:10%">'+movimento.fieldByName('DESCRICAOCONTA').asString()+'</td>'+
+									'<td style="width:10%"><b>'+movimento.fieldByName('DATA').asString()+'</b></td>'+
+									'<td style="width:10%">'+movimento.fieldByName('DESCRICAO').asString()+'</td>'+
+									'<td style="width:10%" align="right"><font color="'+FColorValor+'"><b>'+formataValores('N',parseDouble(movimento.fieldByName('VALOR').asString()),2)+'</b></font></td>'+
+									'<td style="width:10%">'+movimento.fieldByName('FORMA').asString()+'-'+movimento.fieldByName('TIPOPGTO').asString()+'</td>'+
+									'<td style="width:10%" align="right"><font color="'+FColorCCorrente+'">'+formataValores('N',parseDouble(cconrrente),2)+'</font></td>'+
+									'<td style="width:10%" align="right"><font color="'+FColorDinheiro+'">'+formataValores('N',parseDouble(dinheiro),2)+'</font></td>'+
+									'<td style="width:10%" align="right"><font color="'+FColorCCredito+'">'+formataValores('N',parseDouble(ccredito),2)+'</font></td>'+
+									'<td style="width:10%" align="center"><img title="Remover item" src="images/btn-excluir.png" style="cursor:pointer;" class="imgRemover"></td>' +
+								'</tr>';						
+						movimento.next();	
+					}					
+					if (data !== ""){
+						//LancamentoLista.atualizarSaldo(data,formataValores('N',parseDouble(cconrrente),2),formataValores('N',parseDouble(dinheiro),2),formataValores('N',parseDouble(ccredito),2));
+					}
+					tela.querySelector('#listaLancamentos').innerHTML = lista;
+					var btn_excluir = tela.querySelectorAll('.imgRemover');
+					var i = 0, l = btn_excluir.length;
+					for(; i < l; i++) {
+						btn_excluir[i].addEventListener('click', LancamentoLista.remover);						
+					}
+				});
+			});
+		};
+		
+		LancamentoLista.remover = function(e) {
+			var tela = defineQuemsou(e.target);
+			if (!confirm('Deseja realmente excluir este item?')) {
+				return;
+		 	}
+			var linha = parentUntilAttr(e.target, 'role', 'linha');
+			var smovimento = linha.getAttribute('smovimento')
+			var movimento = new DataSet('','MOVIMENTO', function() {
+				movimento.close();
+				movimento.condicao(' WHERE MOVIMENTO.SMOVIMENTO =' + smovimento);
+				movimento.open(function() {					
+					movimento.del(function(){
+						LancamentoLista.listar(tela, tela.querySelector('#meses').value, tela.querySelector('#anos').value);
+					});
+				});
+			});	
+		};
+		
+		LancamentoLista.atualizarSaldo = function (DATA, cconrrente, dinheiro, ccredito){
+			var data = new Date(stringToDate(DATA,"dd/MM/yyyy","/"));
+			var mes = parseInt(data.getMonth() + 1);
+			var ano = data.getFullYear();			
+			var saldo = new DataSet('','SALDO', function() {
+				saldo.condicao(' WHERE SALDO.MES = ' + mes + ' AND SALDO.ANO = ' + ano);
+				saldo.open(function() {
+					if (!saldo.isEmpty()){
+						saldo.edit();						
+						saldo.fieldByName('CCORRENTE').asString(cconrrente);						
+						saldo.fieldByName('DINHEIRO').asString(dinheiro);						
+						saldo.fieldByName('CCREDITO').asString(ccredito);
+						saldo.post();
+					} else{
+						saldo.insert();
+						saldo.fieldByName('MES').asString(mes);
+						saldo.fieldByName('ANO').asString(ano);
+						saldo.fieldByName('CCORRENTE').asString(cconrrente);
+						saldo.fieldByName('DINHEIRO').asString(dinheiro);
+						saldo.fieldByName('CCREDITO').asString(ccredito);
+						saldo.post();
+					}					
+				});
+			});				
+		};
+
+		classeJS = LancamentoLista;
+		return LancamentoLista;
+
+	})();
+</script>

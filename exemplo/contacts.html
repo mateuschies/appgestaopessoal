@@ -1,0 +1,28 @@
+<!-- http://docs.phonegap.com/en/1.2.0/index.html-->
+<html>
+  <head>
+    <title>Contact Example</title>
+
+    <script type="text/javascript" charset="utf-8" src="phonegap-1.2.0.js"></script>
+    <script type="text/javascript" charset="utf-8">
+
+    // Wait for PhoneGap to load
+    //
+    document.addEventListener("deviceready", onDeviceReady, false);
+
+    // PhoneGap is ready
+    //
+    function onDeviceReady() {
+        var myContact = navigator.contacts.create({"displayName": "Test User"});
+        myContact.gender = "male";
+        console.log("The contact, " + myContact.displayName + ", is of the " + myContact.gender + " gender");
+    }
+
+
+    </script>
+  </head>
+  <body>
+    <h1>Example</h1>
+    <p>Create Contact</p>
+  </body>
+</html>

@@ -1,0 +1,126 @@
+<form id="form">
+	<div style="width:100%">
+		<select id="tipo" name="tipo" style="width:100%;">
+			<option value="MOV">Movimentos</option>
+			<option value="PRE">Previsão</option>
+			<option value="CAR">Caronas</option>
+		</select>
+	</div>
+	<div style="width:100%">
+		<div style="width:50%;float:left">
+			<select id="meses" name="meses" style="width:100%">
+				<option value="1">Janeiro</option>
+				<option value="2">Fevereiro</option>
+				<option value="3">Março</option>
+				<option value="4">Abril</option>
+				<option value="5">Maio</option>
+				<option value="6">Junho</option>
+				<option value="7">Julho</option>
+				<option value="8">Agosto</option>
+				<option value="9">Setembro</option>
+				<option value="10">Outubro</option>
+				<option value="11">Novembro</option>
+				<option value="12">Dezembro</option>
+			</select>
+		</div>
+		<div style="width:30%;float:left">
+			<select id="anos" name="anos" style="width:100%;">
+				<option value="2015">2015</option>
+				<option value="2016">2016</option>
+				<option value="2017">2017</option>
+				<option value="2018">2018</option>
+				<option value="2019">2019</option>
+				<option value="2020">2020</option>
+			</select>		
+		</div>
+		<div style="width:10%;float:left">
+			<input type="button" value="..." id="btnExportar" style="width:100%;height:3em"/>
+		</div>
+		<div style="width:10%;float:left">
+			<input type="button" value="@" id="btnEnviar" style="width:100%;height:3em"/>
+		</div>
+	</div>
+	<div style="width:100%;">
+		<textarea name="dados" id="dados" style="height:calc(100% - 115px);"></textarea>
+	</div>
+</form>
+<script>  
+	var Exportar = (function() {
+		var csvNewLine = "\r\n";
+		var lista = "";
+		function Exportar() {
+			if (!(this instanceof Exportar)) {
+				return new Exportar();
+			}
+		}
+		Exportar.Init = function(tela) {
+			tela.querySelector('#btnExportar').addEventListener('click', Exportar.exportar);			
+			tela.querySelector('#btnEnviar').addEventListener('click', Exportar.enviar);
+			var data = new Date();
+			var mes = parseInt(data.getMonth() + 1);
+			tela.querySelector('#meses').value = mes;			
+			var ano = data.getFullYear();
+			tela.querySelector('#anos').value = ano;
+		};
+		
+		Exportar.enviar = function(e) {
+			var tela = defineQuemsou(e.target);
+			var tipo = tela.querySelector("#tipo").options[tela.querySelector("#tipo").selectedIndex].text;
+			
+			window.location.href = 'mailto: mateuschies@gmail.com?Subject='+encodeURIComponent('Gestão Pessoal - '+tipo)+'&body='+encodeURIComponent(lista);
+		};
+		
+		Exportar.exportar = function(e) {
+			var tela = defineQuemsou(e.target);
+			var mes = tela.querySelector('#meses').value;
+			var ano = tela.querySelector('#anos').value;
+			var tipo = tela.querySelector('#tipo').value;
+			lista = '';
+			if (mes < 10)
+				mes = "0" + mes;
+			var primeiroDia = ano + "-" + mes + "-01";
+			var ultimoDia = ano + "-" + mes + "-"+ daysInMonth(mes, ano);
+			if (tipo === "MOV"){
+				var movimento = new DataSet('','MOVIMENTO', function() {
+					movimento.close();
+					movimento.commandText('SELECT MOVIMENTO.*, CONTA.CONTA, CONTA.TIPO, CONTA.DESCRICAO AS DESCRICAOCONTA,'+
+									' MEIOPGTO.PGTO, MEIOPGTO.FORMA, MEIOPGTO.TIPO AS TIPOMEIOPGTO'+
+									' FROM MOVIMENTO'+
+									' LEFT JOIN CONTA ON (MOVIMENTO.SCONTA=CONTA.SCONTA )'+
+									' LEFT JOIN MEIOPGTO ON (MEIOPGTO.SMEIOPGTO=MOVIMENTO.SMEIOPGTO)')
+					movimento.condicao(' WHERE MOVIMENTO.DATA BETWEEN \''+primeiroDia+'\' AND \''+ultimoDia+'\''+
+									' ORDER BY MOVIMENTO.DATA, MOVIMENTO.SMOVIMENTO');
+					movimento.open(function() {
+						while(!movimento.eof()) {							
+							lista += movimento.fieldByName('CONTA').asString()+';'+movimento.fieldByName('DATA').asString()+';'+
+										movimento.fieldByName('DESCRICAO').asString()+';'+formataValores('N',parseDouble(movimento.fieldByName('VALOR').asString()),2)+';'+
+										movimento.fieldByName('PGTO').asString()+csvNewLine;
+							movimento.next();	
+						}					
+						tela.querySelector('#dados').innerHTML = lista;
+					});
+				});
+			} else if (tipo === "PRE"){
+				lista = "Previsão";
+			} else if (tipo === "CAR"){
+				var carona = new DataSet('','CARONA', function() {
+					carona.close();
+					carona.condicao(' WHERE CARONA.DATA BETWEEN \''+primeiroDia+'\' AND \''+ultimoDia+'\''+
+									' ORDER BY CARONA.DATA');
+					carona.open(function() {					
+						while(!carona.eof()) {						
+							lista += carona.fieldByName('DATA').asString()+';'+carona.fieldByName('DESCRICAO').asString()+csvNewLine;
+							carona.next();	
+						}					
+						tela.querySelector('#dados').innerHTML = lista;
+					});
+				});
+			}
+		};
+		
+
+		classeJS = Exportar;
+		return Exportar;
+
+	})();
+</script>

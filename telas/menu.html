@@ -1,0 +1,38 @@
+<div id="inputList" class="input-list">
+  <form>
+    <input type="button" value="Movimentos" id="btnLancar"> 
+    <input type="button" value="Previsão" id="btnPrevisao">
+	<input type="button" value="Caronas" id="btnCaronas">
+    <input type="button" value="C.Crédito" id="btnCCredito">
+    <input type="button" value="Gráfico" id="btnGrafico">
+	<input type="button" value="Exportar" id="btnExportar">
+	<input type="button" value="Saldos" id="btnSaldo">
+    <input type="button" value="Instruções" id="btnInstrucoes">
+  </form>
+</div>
+<script>  
+  document.querySelector('#btnLancar').addEventListener('click', function() {
+    WebApp.navegar('lancamento.html',{});
+  });
+  document.querySelector('#btnPrevisao').addEventListener('click', function() {
+    WebApp.navegar('previsao.html',{});
+  }); 
+  document.querySelector('#btnCaronas').addEventListener('click', function() {
+    WebApp.navegar('carona.html',{});
+  }); 
+  document.querySelector('#btnCCredito').addEventListener('click', function() {
+    alert('Em Desenvolvimento');
+  }); 
+  document.querySelector('#btnGrafico').addEventListener('click', function() {
+    alert('Em Desenvolvimento');
+  });
+  document.querySelector('#btnExportar').addEventListener('click', function() {
+    WebApp.navegar('exportar.html',{});
+  });
+  document.querySelector('#btnSaldo').addEventListener('click', function() {
+    WebApp.navegar('saldo.html',{});
+  });
+  document.querySelector('#btnInstrucoes').addEventListener('click', function() {
+    WebApp.navegar('instrucoes.html',{});
+  });
+</script>

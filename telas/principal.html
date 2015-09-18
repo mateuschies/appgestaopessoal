@@ -1,0 +1,55 @@
+<div>
+  <h1>Orçamento Doméstico</h1>
+</div>
+<div>
+  <fieldset>
+    <legend>Movimentação do Saldo no Mês</legend>
+    <div>
+      <label>C.Corrente (+/-)</label>
+      <br>
+      <input type="text" id="cconrrente" name="cconrrente" style="width:100%;text-align:right" readonly="readonly"/>
+    </div>
+    <div>
+      <label>Dinheiro (+/-)</label>
+      <br>
+      <input type="text" id="dinheiro" name="dinheiro" style="width:100%;text-align:right" readonly="readonly" />
+    </div>
+    <div>
+      <label>C. de Crédito (+)</label>
+      <br>
+      <input type="text" id="ccredito" name="ccredito" style="width:100%;text-align:right" readonly="readonly"/>
+    </div>
+  </fieldset>
+</div>
+<script>  
+	var Principal = (function() {
+
+		function Principal() {
+			if (!(this instanceof Principal)) {
+				return new Principal();
+			}
+		}
+		Principal.Init = function(tela) {
+			var data = new Date();
+			var mes = parseInt(data.getMonth() + 1);
+			var ano = data.getFullYear();
+			var saldo = new DataSet('','SALDO', function() {
+				saldo.condicao(' WHERE SALDO.MES = ' + mes + ' AND SALDO.ANO = ' + ano);
+				saldo.open(function() {
+					if (!saldo.isEmpty()){
+						tela.querySelector('#cconrrente').value = formataValores('N',parseDouble(saldo.fieldByName('CCORRENTE').asString()),2);
+						tela.querySelector('#dinheiro').value = formataValores('N',parseDouble(saldo.fieldByName('DINHEIRO').asString()),2);
+						tela.querySelector('#ccredito').value = formataValores('N',parseDouble(saldo.fieldByName('CCREDITO').asString()),2);						
+					} else{
+						tela.querySelector('#cconrrente').value = '0,00';
+						tela.querySelector('#dinheiro').value = '0,00';
+						tela.querySelector('#ccredito').value = '0,00';
+					}					
+				});
+			});		
+		};
+		classeJS = Principal;
+		return Principal;
+
+	})();
+</script>

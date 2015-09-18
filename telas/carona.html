@@ -1,0 +1,73 @@
+<form id="form">
+	<div>
+		<label>Data:</label>
+		<br>
+		<input type="date" id="data" name="data" value="" style="width:100%"/>
+	</div>
+	<div>		
+		<label>Motorista:</label>
+		<br>
+		<select id="DESCRICAO" name="DESCRICAO" style="width:100%">
+			<option value="Chies, Mateus Andre">Chies, Mateus Andre</option>
+			<option value="Dresch, Miguel Angelo">Dresch, Miguel Angelo</option>
+			<option value="Kuhn, Eduardo Ivan">Kuhn, Eduardo Ivan</option>			
+			<option value="Sipmann, Mauricio Camargo">Sipmann, Mauricio Camargo</option>
+		</select>
+	</div>	
+	<div>		
+		<input type="button" value="Salvar" id="btnSalvar" style="width:100%;height:50px"/>
+		<input type="button" value="Listar" id="btnListar" style="width:100%;height:50px"/>
+	</div>
+</form>
+<script>
+	var Carona = (function() {
+		function Carona() {
+			if (!(this instanceof Carona)) {
+				return new Carona();
+			}
+		}
+		Carona.Init = function(tela) {		
+			
+			var data = new Date();
+			var mes = parseInt(data.getMonth() + 1);
+			var dia = data.getDate();
+			if (mes < 10)
+				mes = "0" + mes;
+			if (dia < 10) {
+				dia = "0" + dia;
+			}
+			tela.querySelector('#data').value = data.getFullYear() + "-" + mes + "-" + dia;
+			
+			tela.querySelector('#btnSalvar').addEventListener('click', Carona.salvar);
+			tela.querySelector('#btnListar').addEventListener('click', Carona.listar);
+		};
+
+		Carona.salvar = function(e) {
+			var tela = defineQuemsou(e.target);
+			
+			var carona = new DataSet('','CARONA', function() {
+				var data = new Date();
+				carona.condicao(' WHERE CARONA.DATA = "'+tela.querySelector('#data').value+'"');
+				carona.open(function() {
+					if (carona.recordCount() === 0){
+						carona.insert();
+						carona.fieldByName('DATA').asString(tela.querySelector('#data').value);
+					} else{
+						carona.edit();
+					}
+					carona.fieldByName('DESCRICAO').asString(tela.querySelector('#DESCRICAO').value);
+					carona.post();
+					Carona.listar(e);
+				});
+			});			
+		};
+
+		Carona.listar = function(e) {
+			WebApp.navegar('caronaLista.html',{});
+		};		
+
+		classeJS = Carona;
+		return Carona;
+
+	})();
+</script>

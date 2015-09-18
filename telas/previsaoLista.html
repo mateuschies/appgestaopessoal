@@ -1,0 +1,212 @@
+<form id="form">
+	<div style="width:calc(100% - 10px);">
+		<div style="width:60%;float:left">
+			<select id="meses" name="meses" style="width:100%">
+				<option value="1">Janeiro</option>
+				<option value="2">Fevereiro</option>
+				<option value="3">Março</option>
+				<option value="4">Abril</option>
+				<option value="5">Maio</option>
+				<option value="6">Junho</option>
+				<option value="7">Julho</option>
+				<option value="8">Agosto</option>
+				<option value="9">Setembro</option>
+				<option value="10">Outubro</option>
+				<option value="11">Novembro</option>
+				<option value="12">Dezembro</option>
+			</select>
+		</div>
+		<div style="width:30%;float:left">
+			<select id="anos" name="anos" style="width:100%;">
+				<option value="2015">2015</option>
+				<option value="2016">2016</option>
+				<option value="2017">2017</option>
+				<option value="2018">2018</option>
+				<option value="2019">2019</option>
+				<option value="2020">2020</option>
+			</select>		
+		</div>
+		<div style="width:10%;float:left">
+			<input type="button" value="..." id="btnCarregar" style="width:100%;height:50px"/>
+		</div>
+	</div>
+	<div id="dados" name="dados" style="width:calc(100% - 10px);height:50px">
+		<table>
+			<thead>
+				<th style="width:40%">Receita</th>
+				<th style="width:40%"><label id="mes"></label></th>
+				<th style="width:10%">Excluir</th>
+			</thead>
+			<tbody id="listaitensReceita" role="lista">
+
+			</tbody>			
+			<tfoot>
+				<td style="width:40%"><b>Total da Receita Líquida</b></td>
+				<td style="width:40%" align="right"><label id="totalReceita"></label></td>
+				<td style="width:10%"></td>
+			</tfoot>
+		</table>	
+		<table>
+			<thead>
+				<th style="width:40%">Detalhamento de despesas</th>
+				<th style="width:40%"><label id="mes1"></label></th>
+				<th style="width:10%">Excluir</th>
+			</thead>
+			<tbody id="listaitensDespesas" role="lista">
+
+			</tbody>			
+			<tfoot>
+				<td style="width:40%"><b>Total das despesas</b></td>
+				<td style="width:40%" align="right"><label id="totalDespesa"></label></td>
+				<td style="width:10%"></td>
+			</tfoot>
+		</table>
+	</div>
+</form>
+<script>
+	var PrevisaoLista = (function() {
+
+		function PrevisaoLista() {
+			if (!(this instanceof PrevisaoLista)) {
+				return new PrevisaoLista();
+			}
+		}
+		PrevisaoLista.Init = function(tela) {
+			tela.querySelector("#btnCarregar").addEventListener('click', PrevisaoLista.carregar);
+			var data = new Date();
+			var mes = parseInt(data.getMonth() + 1);
+			tela.querySelector('#meses').value = mes;			
+			var ano = data.getFullYear();
+			tela.querySelector('#anos').value = ano;
+			var nomeMes = '';
+			if (mes === 1){
+				nomeMes = 'Janeiro';
+			} else if (mes === 2){
+				nomeMes = 'Fevereiro';
+			} else if (mes === 3){
+				nomeMes = 'Março';
+			} else if (mes === 4){
+				nomeMes = 'Abril';
+			} else if (mes === 5){
+				nomeMes = 'Maio';
+			} else if (mes === 6){
+				nomeMes = 'Junho';
+			} else if (mes === 7){
+				nomeMes = 'Julho';
+			} else if (mes === 8){
+				nomeMes = 'Agosto';
+			} else if (mes === 9){
+				nomeMes = 'Setembro';
+			} else if (mes === 10){
+				nomeMes = 'Outubro';
+			} else if (mes === 11){
+				nomeMes = 'Novembro';
+			} else if (mes === 12){
+				nomeMes = 'Dezembro';
+			}
+			tela.querySelector('#mes').innerText = nomeMes + '/' + ano;
+			tela.querySelector('#mes1').innerText = nomeMes + '/' + ano;
+			PrevisaoLista.listar(tela, mes, ano);
+		};
+		
+		PrevisaoLista.carregar = function(e) {
+			var tela = defineQuemsou(e.target);
+			var texto = tela.querySelector('#meses').options[tela.querySelector('#meses').selectedIndex].text + '/' + tela.querySelector('#anos').value;
+			tela.querySelector('#mes').innerText = texto;
+			tela.querySelector('#mes1').innerText = texto;
+			PrevisaoLista.listar(tela, tela.querySelector('#meses').value, tela.querySelector('#anos').value);
+		};
+		
+		PrevisaoLista.listar = function(tela, mes, ano) {
+			var lista = '';
+			var previsaoRec = new DataSet('','PREVISAO', function() {
+				previsaoRec.close();
+				previsaoRec.commandText('SELECT PREVISAO.*, CONTA.*'+
+								' FROM PREVISAO'+
+								' LEFT JOIN CONTA ON (PREVISAO.SCONTA=CONTA.SCONTA )')
+				previsaoRec.condicao(' WHERE PREVISAO.MES='+mes+' AND PREVISAO.ANO='+ano+' AND CONTA.CONTA LIKE \'R_\'');
+				previsaoRec.open(function() {					
+					var totalReceita = 0.0;
+					while(!previsaoRec.eof()) {
+						totalReceita += parseDouble(previsaoRec.fieldByName('VALOR').asString());
+						lista += '<tr role="linha" sprevisao="'+previsaoRec.fieldByName('SPREVISAO').asString()+'">'+
+									'<td style="width:40%">'+previsaoRec.fieldByName('DESCRICAO').asString()+'</td>'+
+									'<td style="width:40%" align="right">'+formataValores('N',parseDouble(previsaoRec.fieldByName('VALOR').asString()),2)+'</td>'+
+									'<td style="width:10%" align="center"><img title="Remover item" src="images/btn-excluir.png" style="cursor:pointer;" class="imgRemover"></td>' +
+								'</tr>';
+						previsaoRec.next();	
+					}
+					totalReceita = formataValores('N',parseDouble(totalReceita),2);
+					tela.querySelector('#totalReceita').innerText = totalReceita;
+					tela.querySelector('#listaitensReceita').innerHTML = lista;
+				});
+			});
+			
+			var previsao = new DataSet('','PREVISAO', function() {
+				previsao.close();
+				previsao.commandText('SELECT PREVISAO.*, CONTA.*'+
+								' FROM PREVISAO'+
+								' LEFT JOIN CONTA ON (PREVISAO.SCONTA=CONTA.SCONTA )')
+				previsao.condicao(' WHERE PREVISAO.MES='+mes+' AND PREVISAO.ANO='+ano+' AND CONTA.CONTA NOT LIKE \'R_\'');
+				previsao.open(function() {
+					lista = '';
+					var tipo = '';
+					var totalDespesa = 0.0;
+					while(!previsao.eof()) {
+						totalDespesa += parseDouble(previsao.fieldByName('VALOR').asString());
+						if (tipo !== previsao.fieldByName('TIPO').asString()){
+							lista += '<tr style="br-color:gray">'+
+										'<td style="width:40%"><b>'+previsao.fieldByName('TIPO').asString()+'</b></td>'+
+										'<td style="width:40%"></td>'+
+										'<td style="width:10%"></td>'+
+									'</tr>';
+							lista += '<tr role="linha" sprevisao="'+previsao.fieldByName('SPREVISAO').asString()+'">'+
+										'<td style="width:40%">&nbsp;&nbsp;&nbsp;'+previsao.fieldByName('DESCRICAO').asString()+'</td>'+
+										'<td style="width:40%" align="right">'+formataValores('N',parseDouble(previsao.fieldByName('VALOR').asString()),2)+'</td>'+
+										'<td style="width:10%" align="center"><img title="Remover item" src="images/btn-excluir.png" style="cursor:pointer;" class="imgRemover"></td>' +
+									'</tr>';
+							tipo = previsao.fieldByName('TIPO').asString();
+						} else{
+							lista += '<tr role="linha" sprevisao="'+previsao.fieldByName('SPREVISAO').asString()+'">'+
+										'<td style="width:40%">&nbsp;&nbsp;&nbsp;'+previsao.fieldByName('DESCRICAO').asString()+'</td>'+
+										'<td style="width:40%" align="right">'+formataValores('N',parseDouble(previsao.fieldByName('VALOR').asString()),2)+'</td>'+
+										'<td style="width:10%" align="center"><img title="Remover item" src="images/btn-excluir.png" style="cursor:pointer;" class="imgRemover"></td>' +
+									'</tr>';
+						}
+						previsao.next();	
+					}
+					totalDespesa = formataValores('N',parseDouble(totalDespesa),2);
+					tela.querySelector('#totalDespesa').innerText = totalDespesa;
+					tela.querySelector('#listaitensDespesas').innerHTML = lista;
+					var btn_excluir = tela.querySelectorAll('.imgRemover');
+					var i = 0, l = btn_excluir.length;
+					for(; i < l; i++) {
+						btn_excluir[i].addEventListener('click', PrevisaoLista.remover);						
+					}
+				});
+			});		
+		};
+		
+		PrevisaoLista.remover = function(e) {
+			var tela = defineQuemsou(e.target);
+			if (!confirm('Deseja realmente excluir este item?')) {
+				return;
+		 	}
+			var linha = parentUntilAttr(e.target, 'role', 'linha');
+			var sprevisao = linha.getAttribute('sprevisao')
+			var previsao = new DataSet('','PREVISAO', function() {
+				previsao.close();
+				previsao.condicao(' WHERE PREVISAO.SPREVISAO =' + sprevisao);
+				previsao.open(function() {					
+					previsao.del(function(){
+						PrevisaoLista.listar(tela, tela.querySelector('#meses').value, tela.querySelector('#anos').value);
+					});
+				});
+			});	
+		};
+
+		classeJS = PrevisaoLista;
+		return PrevisaoLista;
+
+	})();
+</script>
